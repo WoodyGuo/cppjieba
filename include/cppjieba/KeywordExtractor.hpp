@@ -2,12 +2,17 @@
 #define CPPJIEBA_KEYWORD_EXTRACTOR_H
 
 #include <cmath>
+#include <iostream>
 #include <set>
+#include <unordered_map>
+#include <vector>
+
+#include "utils.h"
+
 #include "MixSegment.hpp"
 
 namespace cppjieba {
 
-using namespace limonp;
 using namespace std;
 
 /*utf8*/
@@ -17,27 +22,21 @@ class KeywordExtractor {
     string word;
     vector<size_t> offsets;
     double weight;
-  }; // struct Word
+  };  // struct Word
 
-  KeywordExtractor(const string& dictPath, 
-        const string& hmmFilePath, 
-        const string& idfPath, 
-        const string& stopWordPath, 
-        const string& userDict = "") 
-    : segment_(dictPath, hmmFilePath, userDict) {
+  KeywordExtractor(const string& dictPath, const string& hmmFilePath, const string& idfPath,
+                   const string& stopWordPath, const string& userDict = "")
+      : segment_(dictPath, hmmFilePath, userDict) {
     LoadIdfDict(idfPath);
     LoadStopWordDict(stopWordPath);
   }
-  KeywordExtractor(const DictTrie* dictTrie, 
-        const HMMModel* model,
-        const string& idfPath, 
-        const string& stopWordPath) 
-    : segment_(dictTrie, model) {
+  KeywordExtractor(const DictTrie* dictTrie, const HMMModel* model, const string& idfPath,
+                   const string& stopWordPath)
+      : segment_(dictTrie, model) {
     LoadIdfDict(idfPath);
     LoadStopWordDict(stopWordPath);
   }
-  ~KeywordExtractor() {
-  }
+  ~KeywordExtractor() {}
 
   void Extract(const string& sentence, vector<string>& keywords, size_t topN) const {
     vector<Word> topWords;
@@ -47,7 +46,7 @@ class KeywordExtractor {
     }
   }
 
-  void Extract(const string& sentence, vector<pair<string, double> >& keywords, size_t topN) const {
+  void Extract(const string& sentence, vector<pair<string, double>>& keywords, size_t topN) const {
     vector<Word> topWords;
     Extract(sentence, topWords, topN);
     for (size_t i = 0; i < topWords.size(); i++) {
@@ -71,7 +70,7 @@ class KeywordExtractor {
       wordmap[words[i]].weight += 1.0;
     }
     if (offset != sentence.size()) {
-      XLOG(ERROR) << "words illegal";
+      std::cerr << "words illegal" << std::endl;
       return;
     }
 
@@ -91,11 +90,12 @@ class KeywordExtractor {
     partial_sort(keywords.begin(), keywords.begin() + topN, keywords.end(), Compare);
     keywords.resize(topN);
   }
+
  private:
   void LoadIdfDict(const string& idfPath) {
     ifstream ifs(idfPath.c_str());
-    XCHECK(ifs.is_open()) << "open " << idfPath << " failed";
-    string line ;
+    // XCHECK(ifs.is_open()) << "open " << idfPath << " failed";
+    string line;
     vector<string> buf;
     double idf = 0.0;
     double idfSum = 0.0;
@@ -103,18 +103,17 @@ class KeywordExtractor {
     for (; getline(ifs, line); lineno++) {
       buf.clear();
       if (line.empty()) {
-        XLOG(ERROR) << "lineno: " << lineno << " empty. skipped.";
+        std::cerr << "lineno: " << lineno << " empty. skipped." << std::endl;
         continue;
       }
-      Split(line, buf, " ");
+      buf = hola::Split(line, " ");
       if (buf.size() != 2) {
-        XLOG(ERROR) << "line: " << line << ", lineno: " << lineno << " empty. skipped.";
+        std::cerr << "line: " << line << ", lineno: " << lineno << " empty. skipped." << std::endl;
         continue;
       }
       idf = atof(buf[1].c_str());
       idfMap_[buf[0]] = idf;
       idfSum += idf;
-
     }
 
     assert(lineno);
@@ -123,31 +122,28 @@ class KeywordExtractor {
   }
   void LoadStopWordDict(const string& filePath) {
     ifstream ifs(filePath.c_str());
-    XCHECK(ifs.is_open()) << "open " << filePath << " failed";
-    string line ;
+    // XCHECK(ifs.is_open()) << "open " << filePath << " failed";
+    string line;
     while (getline(ifs, line)) {
       stopWords_.insert(line);
     }
     assert(stopWords_.size());
   }
 
-  static bool Compare(const Word& lhs, const Word& rhs) {
-    return lhs.weight > rhs.weight;
-  }
+  static bool Compare(const Word& lhs, const Word& rhs) { return lhs.weight > rhs.weight; }
 
   MixSegment segment_;
   unordered_map<string, double> idfMap_;
   double idfAverage_;
 
   unordered_set<string> stopWords_;
-}; // class KeywordExtractor
+};  // class KeywordExtractor
 
-inline ostream& operator << (ostream& os, const KeywordExtractor::Word& word) {
-  return os << "{\"word\": \"" << word.word << "\", \"offset\": " << word.offsets << ", \"weight\": " << word.weight << "}"; 
+inline ostream& operator<<(ostream& os, const KeywordExtractor::Word& word) {
+  return os << "{\"word\": \"" << word.word  // << "\", \"offset\": " << word.offsets
+            << ", \"weight\": " << word.weight << "}";
 }
 
-} // namespace cppjieba
+}  // namespace cppjieba
 
 #endif
-
-

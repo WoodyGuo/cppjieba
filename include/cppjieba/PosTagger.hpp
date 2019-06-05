@@ -1,12 +1,13 @@
 #ifndef CPPJIEBA_POS_TAGGING_H
 #define CPPJIEBA_POS_TAGGING_H
 
-#include "limonp/StringUtil.hpp"
-#include "SegmentTagged.hpp"
+#include <iostream>
+#include <vector>
+
 #include "DictTrie.hpp"
+#include "SegmentTagged.hpp"
 
 namespace cppjieba {
-using namespace limonp;
 
 static const char* const POS_M = "m";
 static const char* const POS_ENG = "eng";
@@ -14,12 +15,11 @@ static const char* const POS_X = "x";
 
 class PosTagger {
  public:
-  PosTagger() {
-  }
-  ~PosTagger() {
-  }
+  PosTagger() {}
+  ~PosTagger() {}
 
-  bool Tag(const string& src, vector<pair<string, string> >& res, const SegmentTagged& segment) const {
+  bool Tag(const string& src, vector<pair<string, string>>& res,
+           const SegmentTagged& segment) const {
     vector<string> CutRes;
     segment.Cut(src, CutRes);
 
@@ -29,21 +29,21 @@ class PosTagger {
     return !res.empty();
   }
 
-  string LookupTag(const string &str, const SegmentTagged& segment) const {
-    const DictUnit *tmp = NULL;
+  string LookupTag(const string& str, const SegmentTagged& segment) const {
+    const DictUnit* tmp = NULL;
     RuneStrArray runes;
-    const DictTrie * dict = segment.GetDictTrie();
+    const DictTrie* dict = segment.GetDictTrie();
     assert(dict != NULL);
-      if (!DecodeRunesInString(str, runes)) {
-        XLOG(ERROR) << "Decode failed.";
-        return POS_X;
-      }
-      tmp = dict->Find(runes.begin(), runes.end());
-      if (tmp == NULL || tmp->tag.empty()) {
-        return SpecialRule(runes);
-      } else {
-        return tmp->tag;
-      }
+    if (!DecodeRunesInString(str, runes)) {
+      std::cerr << "Decode failed." << std::endl;
+      return POS_X;
+    }
+    tmp = dict->Find(runes.begin(), runes.end());
+    if (tmp == NULL || tmp->tag.empty()) {
+      return SpecialRule(runes);
+    } else {
+      return tmp->tag;
+    }
   }
 
  private:
@@ -52,7 +52,7 @@ class PosTagger {
     size_t eng = 0;
     for (size_t i = 0; i < unicode.size() && eng < unicode.size() / 2; i++) {
       if (unicode[i].rune < 0x80) {
-        eng ++;
+        eng++;
         if ('0' <= unicode[i].rune && unicode[i].rune <= '9') {
           m++;
         }
@@ -70,8 +70,8 @@ class PosTagger {
     return POS_ENG;
   }
 
-}; // class PosTagger
+};  // class PosTagger
 
-} // namespace cppjieba
+}  // namespace cppjieba
 
 #endif

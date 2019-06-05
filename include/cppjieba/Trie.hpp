@@ -1,9 +1,10 @@
 #ifndef CPPJIEBA_TRIE_HPP
 #define CPPJIEBA_TRIE_HPP
 
-#include <vector>
 #include <queue>
-#include "limonp/StdExtension.hpp"
+#include <unordered_map>
+#include <vector>
+
 #include "Unicode.hpp"
 
 namespace cppjieba {
@@ -16,7 +17,7 @@ struct DictUnit {
   Unicode word;
   double weight;
   string tag;
-}; // struct DictUnit
+};  // struct DictUnit
 
 // for debugging
 // inline ostream & operator << (ostream& os, const DictUnit& unit) {
@@ -28,35 +29,32 @@ struct DictUnit {
 struct Dag {
   RuneStr runestr;
   // [offset, nexts.first]
-  limonp::LocalVector<pair<size_t, const DictUnit*> > nexts;
-  const DictUnit * pInfo;
+  vector<pair<size_t, const DictUnit*>> nexts;
+  const DictUnit* pInfo;
   double weight;
-  size_t nextPos; // TODO
-  Dag():runestr(), pInfo(NULL), weight(0.0), nextPos(0) {
-  }
-}; // struct Dag
+  size_t nextPos;  // TODO
+  Dag() : runestr(), pInfo(NULL), weight(0.0), nextPos(0) {}
+};  // struct Dag
 
 typedef Rune TrieKey;
 
 class TrieNode {
- public :
-  TrieNode(): next(NULL), ptValue(NULL) {
-  }
+ public:
+  TrieNode() : next(NULL), ptValue(NULL) {}
+
  public:
   typedef unordered_map<TrieKey, TrieNode*> NextMap;
-  NextMap *next;
-  const DictUnit *ptValue;
+  NextMap* next;
+  const DictUnit* ptValue;
 };
 
 class Trie {
  public:
   Trie(const vector<Unicode>& keys, const vector<const DictUnit*>& valuePointers)
-   : root_(new TrieNode) {
+      : root_(new TrieNode) {
     CreateTrie(keys, valuePointers);
   }
-  ~Trie() {
-    DeleteNode(root_);
-  }
+  ~Trie() { DeleteNode(root_); }
 
   const DictUnit* Find(RuneStrArray::const_iterator begin, RuneStrArray::const_iterator end) const {
     if (begin == end) {
@@ -78,19 +76,18 @@ class Trie {
     return ptNode->ptValue;
   }
 
-  void Find(RuneStrArray::const_iterator begin, 
-        RuneStrArray::const_iterator end, 
-        vector<struct Dag>&res, 
-        size_t max_word_len = MAX_WORD_LENGTH) const {
+  void Find(RuneStrArray::const_iterator begin, RuneStrArray::const_iterator end,
+            vector<struct Dag>& res, size_t max_word_len = MAX_WORD_LENGTH) const {
     assert(root_ != NULL);
     res.resize(end - begin);
 
-    const TrieNode *ptNode = NULL;
+    const TrieNode* ptNode = NULL;
     TrieNode::NextMap::const_iterator citer;
     for (size_t i = 0; i < size_t(end - begin); i++) {
       res[i].runestr = *(begin + i);
 
-      if (root_->next != NULL && root_->next->end() != (citer = root_->next->find(res[i].runestr.rune))) {
+      if (root_->next != NULL &&
+          root_->next->end() != (citer = root_->next->find(res[i].runestr.rune))) {
         ptNode = citer->second;
       } else {
         ptNode = NULL;
@@ -98,7 +95,8 @@ class Trie {
       if (ptNode != NULL) {
         res[i].nexts.push_back(pair<size_t, const DictUnit*>(i, ptNode->ptValue));
       } else {
-        res[i].nexts.push_back(pair<size_t, const DictUnit*>(i, static_cast<const DictUnit*>(NULL)));
+        res[i].nexts.push_back(
+            pair<size_t, const DictUnit*>(i, static_cast<const DictUnit*>(NULL)));
       }
 
       for (size_t j = i + 1; j < size_t(end - begin) && (j - i + 1) <= max_word_len; j++) {
@@ -123,14 +121,14 @@ class Trie {
     }
 
     TrieNode::NextMap::const_iterator kmIter;
-    TrieNode *ptNode = root_;
+    TrieNode* ptNode = root_;
     for (Unicode::const_iterator citer = key.begin(); citer != key.end(); ++citer) {
       if (NULL == ptNode->next) {
         ptNode->next = new TrieNode::NextMap;
       }
       kmIter = ptNode->next->find(*citer);
       if (ptNode->next->end() == kmIter) {
-        TrieNode *nextNode = new TrieNode;
+        TrieNode* nextNode = new TrieNode;
 
         ptNode->next->insert(make_pair(*citer, nextNode));
         ptNode = nextNode;
@@ -168,7 +166,7 @@ class Trie {
   }
 
   TrieNode* root_;
-}; // class Trie
-} // namespace cppjieba
+};  // class Trie
+}  // namespace cppjieba
 
-#endif // CPPJIEBA_TRIE_HPP
+#endif  // CPPJIEBA_TRIE_HPP

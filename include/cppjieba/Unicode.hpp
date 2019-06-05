@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <ostream>
-#include "limonp/LocalVector.hpp"
 
 namespace cppjieba {
 
@@ -52,8 +51,8 @@ inline std::ostream& operator << (std::ostream& os, const RuneStr& r) {
   return os << "{\"rune\": \"" << r.rune << "\", \"offset\": " << r.offset << ", \"len\": " << r.len << "}";
 }
 
-typedef limonp::LocalVector<Rune> Unicode;
-typedef limonp::LocalVector<struct RuneStr> RuneStrArray;
+typedef vector<Rune> Unicode;
+typedef vector<struct RuneStr> RuneStrArray;
 
 // [left, right]
 struct WordRange {
