@@ -93,6 +93,8 @@ class KeywordExtractor {
 
  private:
   void LoadIdfDict(const string& idfPath) {
+    if (idfPath.empty()) return;
+
     ifstream ifs(idfPath.c_str());
     // XCHECK(ifs.is_open()) << "open " << idfPath << " failed";
     string line;
@@ -121,6 +123,8 @@ class KeywordExtractor {
     assert(idfAverage_ > 0.0);
   }
   void LoadStopWordDict(const string& filePath) {
+    if (filePath.empty()) return;
+
     ifstream ifs(filePath.c_str());
     // XCHECK(ifs.is_open()) << "open " << filePath << " failed";
     string line;

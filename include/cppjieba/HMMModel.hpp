@@ -35,6 +35,8 @@ struct HMMModel {
   }
   ~HMMModel() {}
   void LoadModel(const string& filePath) {
+    if (filePath.empty()) return;
+
     ifstream ifile(filePath.c_str());
     // XCHECK(ifile.is_open()) << "open " << filePath << " failed";
     string line;
